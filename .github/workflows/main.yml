@@ -1,0 +1,75 @@
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  buildHtml:
+    runs-on: windows-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+    - uses: actions/checkout@v4.1.7
+    - uses: krdlab/setup-haxe@master
+
+    - name: Install Haxelib
+      run: |
+        haxelib setup C:/haxelib
+      shell: cmd
+
+    - name: Install Dependencies
+      run: |
+        haxelib install lime
+        haxelib install openfl
+        haxelib install flixel
+        haxelib run lime setup flixel
+      shell: cmd
+
+    - name: Compile
+      run: haxelib run lime build html5 --app-version="4.0.0-${{ github.run_id}}"  -D officialBuild
+      shell: cmd
+    
+    - name: Publish Artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        name: htmlBuild
+        path: export/html5/bin
+
+
+    - name: Deploy Pages
+      uses: actions/deploy-pages@v4
+      with:
+        artifact_name: htmlBuild
+
+  buildWindows:
+    runs-on: windows-latest
+      
+    steps:
+    - uses: actions/checkout@v4.1.7
+    - uses: krdlab/setup-haxe@master
+
+    - name: Install Haxelib
+      run: |
+        haxelib setup C:/haxelib
+      shell: cmd
+
+    - name: Install Dependencies
+      run: |
+        haxelib install lime
+        haxelib install openfl
+        haxelib install flixel
+        haxelib run lime setup flixel
+      shell: cmd
+      
+    - name: Compile
+      run: haxelib run lime build windows --app-version="4.0.0-${{ github.run_id}}"  -D officialBuild
+      shell: cmd
+    
+    - name: Publish Artifact
+      uses: actions/upload-artifact@v4.3.4
+      with:
+        name: windowsBuild
+        path: export/windows/bin
