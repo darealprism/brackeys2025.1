@@ -58,8 +58,6 @@ class PlayState extends FlxState {
 
 	var disableGoalTemp:Bool = false;
 
-	var mousePositions: Array<Int> = [];
-
 	override public function update(elapsed:Float) {
 		super.update(elapsed);
 
@@ -73,19 +71,6 @@ class PlayState extends FlxState {
 			switchlevel(lvlID + 1);
 			disableGoalTemp = true;
 		});
-
-		// for debug, remove later
-		if (FlxG.mouse.justPressed) {
-			mousePositions.push(FlxG.mouse.x);
-			mousePositions.push(FlxG.mouse.y);
-
-			if (mousePositions.length == 4) {
-				createWall(mousePositions[0], mousePositions[1], mousePositions[2] - mousePositions[0], mousePositions[4] - mousePositions[1]);
-				trace('${mousePositions[0]}, ${mousePositions[1]}, ${mousePositions[2] - mousePositions[0]}, ${mousePositions[4] - mousePositions[1]}');
-
-				mousePositions = [];
-			}
-		}
 
 		bullets.forEach((e) -> if (e.disabled) e.destroy());
 	}
