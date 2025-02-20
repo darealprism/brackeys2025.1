@@ -9,13 +9,18 @@ import sprites.Bullet;
 import sprites.GoalArea;
 import sprites.InfoUI;
 import sprites.Shooter;
+import states.substates.PauseSubState;
 
 class PlayState extends FlxState {
 	public static var globalLevelData:Array<Null<LevelInfo>> = [
 		null,
 		{
-			levelDesc: "Damn bro what the fuck am i doing",
-			shotData: new ShotData(3)
+			levelDesc: "SHOOT YOURSELF",
+			bulletNum: 3
+		},
+		{
+			levelDesc: "Pillars",
+			bulletNum: 8
 		}
 	];
 
@@ -40,20 +45,16 @@ class PlayState extends FlxState {
 	override public function create() {
 		super.create();
 
-		shooter = new Shooter();
-		shooter.movementEnabled = true;
-		add(shooter);
+		add(new Background());
 
 		loadLevel();
 
 		camera.bgColor = 0xFF16263b;
-		add(new Background());
+		add(boundariesGroup);
+		add(bullets);
 
 		ui = new InfoUI(lvlID, lvlInfo);
 		add(ui);
-
-		add(boundariesGroup);
-		add(bullets);
 	}
 
 	var disableGoalTemp:Bool = false;
@@ -61,18 +62,21 @@ class PlayState extends FlxState {
 	override public function update(elapsed:Float) {
 		super.update(elapsed);
 
-		FlxG.collide(shooter, boundariesGroup);
 		FlxG.collide(bullets, boundariesGroup);
-		FlxG.collide(bullets, shooter, (a:FlxSprite, b:FlxSprite) -> a.destroy());
-		FlxG.overlap(shooter, goal, (a, b) -> {
-			if (disableGoalTemp) return;
+		if (shooter != null) {
+			FlxG.collide(bullets, shooter, (a:FlxSprite, b:FlxSprite) -> a.destroy());
+			FlxG.collide(shooter, boundariesGroup);
+			FlxG.overlap(shooter, goal, (a, b) -> {
+				if (disableGoalTemp) return;
 
-			trace("you win!!!");
-			switchlevel(lvlID + 1);
-			disableGoalTemp = true;
-		});
+				trace("you win!!!");
+				switchlevel(lvlID + 1);
+				disableGoalTemp = true;
+			});
+		}
 
 		bullets.forEach((e) -> if (e.disabled) e.destroy());
+		if (FlxG.keys.anyJustPressed([ESCAPE])) openSubState(new PauseSubState(0x80000000));
 	}
 
 	public function spawnBullet() {
@@ -85,6 +89,7 @@ class PlayState extends FlxState {
 
 		lvlID = newLevel;
 		loadLevel();
+		ui.updateInfo(lvlID, lvlInfo);
 	}
 
 	private function loadLevel() {
@@ -111,17 +116,38 @@ class PlayState extends FlxState {
 		down.immovable = true;
 		boundariesGroup.add(down);
 
+		if (shooter != null) shooter.destroy();
+		shooter = new Shooter(templvlInfo.bulletNum);
+		shooter.movementEnabled = true;
+		add(shooter);
+
+		if (goal != null) goal.destroy();
 		goal = new GoalArea();
 		add(goal);
 
+		var CENTER_Y = (FlxG.height - 100) / 2 + 100;
+
 		switch (lvlID) {
 			case 1:
+				createWall(0, 100, FlxG.width, 200);
+				createWall(0, FlxG.height - 200, FlxG.width, 200);
 
 				shooter.x = 300;
-				shooter.y = FlxG.height / 2 - shooter.height / 2;
+				shooter.y = CENTER_Y - shooter.height / 2;
 
 				goal.x = FlxG.width - 300;
-				goal.y = FlxG.height / 2 - goal.height / 2;
+				goal.y = CENTER_Y - goal.height / 2;
+			case 2:
+				createWall(10, 110, 285, 280);
+				createWall(475, 285, 220, 385);
+				createWall(845, 465, 345, 200);
+				createWall(845, 110, 345, 200);
+
+				shooter.x = 111;
+				shooter.y = 498;
+
+				goal.x = FlxG.width - 300;
+				goal.y = CENTER_Y - goal.height / 2;
 		}
 
 		disableGoalTemp = false;
@@ -140,5 +166,5 @@ class PlayState extends FlxState {
 
 typedef LevelInfo = {
 	levelDesc:String,
-	shotData:ShotData
+	bulletNum:Int
 }

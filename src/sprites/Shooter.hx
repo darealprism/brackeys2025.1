@@ -6,23 +6,25 @@ import flixel.math.FlxPoint;
 
 class Shooter extends FlxSprite {
     public var movementEnabled: Bool = false;
-	public var shotData:ShotData = new ShotData(999);
+	public var shotData:ShotData;
 
     var barrel: FlxSprite;
 
-	public function new() {
+	public function new(bulletNum:Int) {
         super(200, 200);
         loadGraphic("assets/images/shooter.png", false);
+
+		shotData = new ShotData(bulletNum);
 
 		elasticity = 1;
 		mass = .25;
         solid = true;
-		scale.set(0.125, 0.125);
+		scale.set(0.1, 0.1);
         updateHitbox();
 
         barrel = new FlxSprite();
         barrel.loadGraphic("assets/images/barrel.png", false);
-		barrel.scale.set(0.125, 0.125);
+		barrel.scale.set(0.1, 0.1);
         barrel.updateHitbox();
         FlxG.state.add(barrel);
     }
@@ -45,14 +47,13 @@ class Shooter extends FlxSprite {
 
         shotData.update(elapsed);
 
-		if (FlxG.mouse.pressed && shotData.canUse()) {
+		if ((FlxG.mouse.pressed || FlxG.keys.anyPressed([SPACE])) && shotData.canUse()) {
             shotData.bulletCount -= 1;
 			cast(FlxG.state, states.PlayState).spawnBullet();
             shotData.reset();
 
             velocity.add(
-                Math.cos(angle * (Math.PI / 180)) * shotData.shotStrength,
-                Math.sin(angle * (Math.PI / 180)) * shotData.shotStrength
+			Math.cos(angle * (Math.PI / 180)) * shotData.shotStrength * 0.5, Math.sin(angle * (Math.PI / 180)) * shotData.shotStrength * 0.5
             );
         }
     }
